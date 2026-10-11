@@ -1,3 +1,4 @@
+<?php /* partial */ ?>
 <style>
 body { font-family: 'Poppins', sans-serif; }
 
