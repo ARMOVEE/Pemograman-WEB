@@ -1,2 +1,6 @@
 .env
+.env.*
+!.env.example
 logs/
+vendor/
+node_modules/
