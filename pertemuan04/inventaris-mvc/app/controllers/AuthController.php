@@ -14,7 +14,8 @@ class AuthController extends Controller
         $password = $_POST['password'] ?? '';
         $user = $this->model('User')->login($username, $password);
         if ($user) {
-            $_SESSION['user'] = $user;
+            Security::loginUser($user);
+            $this->model('User')->touchLogin((int) $user['id']);
             $this->flash('success', 'Selamat datang, ' . $user['full_name'] . '!');
             $this->redirect('dashboard');
         }
@@ -24,9 +25,8 @@ class AuthController extends Controller
 
     public function logout(): void
     {
-        $_SESSION = [];
-        session_regenerate_id(true);
-        $this->flash('success', 'Anda telah keluar.');
-        $this->redirect('auth/login');
+        Security::logout();
+        header('Location: ' . BASEURL . '/auth/login');
+        exit;
     }
 }

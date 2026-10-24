@@ -99,6 +99,7 @@ body {
             <?php endif; ?>
 
             <form method="post" action="<?= base_url('auth/authenticate') ?>">
+                <?= csrf_field() ?>
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
                     <input type="text" id="username" name="username" class="form-control" autocomplete="username" required autofocus>

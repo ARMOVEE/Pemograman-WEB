@@ -7,6 +7,7 @@
 <?php if ($loggedIn): ?>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <?php require ROOT_PATH . '/app/views/layouts/sidebar_style.php'; ?>
 <?php endif; ?>
 </head><body class="bg-light">

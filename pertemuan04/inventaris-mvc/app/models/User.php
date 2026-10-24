@@ -22,4 +22,10 @@ class User extends Model
         }
         return false;
     }
+
+    public function touchLogin(int $id): void
+    {
+        $stmt = $this->db->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?");
+        $stmt->execute([$id]);
+    }
 }
