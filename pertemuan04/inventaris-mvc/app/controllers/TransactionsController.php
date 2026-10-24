@@ -44,8 +44,17 @@ class TransactionsController extends Controller
             'quantity' => $qty,
             'notes' => trim($_POST['notes'] ?? '') ?: null,
         ]);
+        if ($ok) {
+            $this->logActivity(
+                'stock.' . strtolower($type),
+                'item',
+                $itemId,
+                $type . ' ' . $qty . ' unit'
+            );
+        }
         $this->flash($ok ? 'success' : 'danger',
             $ok ? $msg : 'Gagal. Stok tidak mencukupi.');
         $this->redirect('items');
     }
+
 }

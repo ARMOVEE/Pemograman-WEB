@@ -16,17 +16,27 @@ class AuthController extends Controller
         if ($user) {
             Security::loginUser($user);
             $this->model('User')->touchLogin((int) $user['id']);
+            $this->logActivity('auth.login', 'user', (int) $user['id'], 'Login berhasil');
             $this->flash('success', 'Selamat datang, ' . $user['full_name'] . '!');
             $this->redirect('dashboard');
         }
+        $this->model('ActivityLog')->record(
+            null,
+            'auth.failed',
+            'user',
+            null,
+            'Login gagal untuk username: ' . mb_substr($username, 0, 100)
+        );
         $this->flash('danger', 'Username atau password salah.');
         $this->redirect('auth/login');
     }
 
     public function logout(): void
     {
+        $this->logActivity('auth.logout', 'user', isset($_SESSION['user']['id']) ? (int) $_SESSION['user']['id'] : null, 'Pengguna logout');
         Security::logout();
         header('Location: ' . BASEURL . '/auth/login');
         exit;
     }
 }
+

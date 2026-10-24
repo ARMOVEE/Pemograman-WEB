@@ -90,6 +90,7 @@ class ItemsController extends Controller
             $this->redirect('items/create');
         }
 
+        $this->logActivity('item.create', 'item', null, $data['code'] . ' - ' . $data['name']);
         $this->flash('success', 'Barang berhasil ditambahkan.');
         $this->redirect('items');
     }
@@ -156,6 +157,7 @@ class ItemsController extends Controller
             Upload::remove($oldPhoto);
         }
 
+        $this->logActivity('item.update', 'item', (int) $id, $data['code'] . ' - ' . $data['name']);
         $this->flash('success', 'Barang berhasil diperbarui.');
         $this->redirect('items');
     }
@@ -171,6 +173,7 @@ class ItemsController extends Controller
         }
         $item = $this->model('Item')->find((int) $id);
         if ($item && $this->model('Item')->softDelete((int) $id)) {
+            $this->logActivity('item.delete', 'item', (int) $id, $item['code'] . ' - ' . $item['name']);
             $this->flash('success', 'Barang dipindahkan ke sampah (soft delete).');
         } else {
             $this->flash('danger', 'Barang gagal dihapus.');
@@ -215,6 +218,7 @@ class ItemsController extends Controller
             $this->redirect('items/trash');
         }
         if ($this->model('Item')->restore((int) $id)) {
+            $this->logActivity('item.restore', 'item', (int) $id, 'Barang dipulihkan');
             $this->flash('success', 'Barang berhasil dipulihkan.');
         } else {
             $this->flash('danger', 'Barang gagal dipulihkan.');

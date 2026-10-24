@@ -35,6 +35,7 @@ class CategoriesController extends Controller
             'name' => $input['name'],
             'description' => $input['description'] ?? '',
         ]);
+        $this->logActivity('category.create', 'category', null, $input['name']);
         $this->flash('success', 'Kategori berhasil ditambahkan.');
         $this->redirect('categories');
     }
@@ -67,6 +68,7 @@ class CategoriesController extends Controller
             'name' => $input['name'],
             'description' => $input['description'] ?? '',
         ]);
+        $this->logActivity('category.update', 'category', (int) $id, $input['name']);
         $this->flash('success', 'Kategori berhasil diperbarui.');
         $this->redirect('categories');
     }
@@ -77,6 +79,7 @@ class CategoriesController extends Controller
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('categories');
         $category = $this->model('Category')->find((int) $id);
         if ($category && $this->model('Category')->softDelete((int) $id)) {
+            $this->logActivity('category.delete', 'category', (int) $id, $category['name']);
             $this->flash('success', 'Kategori dipindahkan ke sampah (soft delete).');
         } else {
             $this->flash('danger', 'Kategori gagal dihapus.');
