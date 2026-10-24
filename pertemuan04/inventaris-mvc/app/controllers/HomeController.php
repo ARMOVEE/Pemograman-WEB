@@ -11,6 +11,8 @@ class HomeController extends Controller {
         $item = $this->model('Item');
         $transaction = $this->model('Transaction');
 
+        $daily = $transaction->dailyTotals(7);
+
         $this->view('dashboard/index', [
             'title' => 'Dashboard',
             'totalItems' => $item->totalItems(),
@@ -21,7 +23,12 @@ class HomeController extends Controller {
             'lowStockThreshold' => Item::LOW_STOCK_THRESHOLD,
             'todayCount' => $transaction->todayCount(),
             'recentTransactions' => $transaction->recent(5),
+            'chartLabels' => array_column($daily, 'label'),
+            'chartIn'     => array_column($daily, 'in'),
+            'chartOut'    => array_column($daily, 'out'),
+            'topItems'    => $item->topStock(5),
         ]);
     }
+
 
 }
