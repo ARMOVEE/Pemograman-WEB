@@ -7,3 +7,5 @@ node_modules/
 
 public/uploads/items/*
 !public/uploads/items/.gitkeep
+
+database/backup-*.sql
