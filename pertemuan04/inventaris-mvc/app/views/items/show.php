@@ -1,4 +1,10 @@
 <?php require ROOT_PATH . '/app/views/layouts/header.php'; ?>
+<?php if (empty($item) || empty($item['id'])): ?>
+    <div class="alert alert-danger">
+        Data barang tidak ditemukan. <a href="<?= base_url('items') ?>" class="alert-link">Kembali ke daftar barang</a>
+    </div>
+<?php require ROOT_PATH . '/app/views/layouts/footer.php'; return; endif; ?>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h3 class="mb-0 fw-bold">Detail Barang</h3>
@@ -9,7 +15,7 @@
             <i class="bi bi-arrow-left"></i> Kembali
         </a>
         <?php if (can('items.update')): ?>
-        <a href="<?= base_url('items/edit/' . (int) $item['id']) ?>" class="btn btn-primary">
+        <a href="<?= base_url('items/edit/' . (int) ($item['id'] ?? 0)) ?>" class="btn btn-primary">
             <i class="bi bi-pencil"></i> Edit
         </a>
         <?php endif; ?>

@@ -95,10 +95,15 @@ class ItemsController extends Controller
         $this->redirect('items');
     }
 
-    public function edit($id = 0): void
+    public function edit($id = null): void
     {
         $this->authorize('items.update');
-        $item = $this->model('Item')->find((int) $id);
+        $id = (int) $id;
+        if ($id <= 0) {
+            $this->flash('danger', 'Barang tidak ditemukan.');
+            $this->redirect('items');
+        }
+        $item = $this->model('Item')->find($id);
         if (!$item) {
             $this->flash('danger', 'Barang tidak ditemukan.');
             $this->redirect('items');
@@ -110,11 +115,15 @@ class ItemsController extends Controller
         ]);
     }
 
-    public function update($id = 0): void
+    public function update($id = null): void
     {
         $this->authorize('items.update');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('items');
         $id = (int) $id;
+        if ($id <= 0) {
+            $this->flash('danger', 'Barang tidak ditemukan.');
+            $this->redirect('items');
+        }
         $current = $this->model('Item')->find($id);
         if (!$current) {
             $this->flash('danger', 'Barang tidak ditemukan.');

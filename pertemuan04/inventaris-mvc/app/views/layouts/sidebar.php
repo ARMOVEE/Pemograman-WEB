@@ -30,15 +30,16 @@ $navInitial = function_exists('mb_substr')
     </div>
     <ul class="nav-links">
         <li class="nav-label">Menu</li>
-        <?php foreach ($navItems as $item): ?>
-        <?php $isActive = $navIs($item['match']); ?>
+        <?php foreach ($navItems as $navItem): ?>
+        <?php $isActive = $navIs($navItem['match']); ?>
         <li class="<?= $isActive ? 'active' : '' ?>">
-            <a href="<?= base_url($item['url']) ?>"<?= $isActive ? ' aria-current="page"' : '' ?>>
-                <i class='bx <?= $item['icon'] ?>'></i>
-                <span class="link-name"><?= e($item['label']) ?></span>
+            <a href="<?= base_url($navItem['url']) ?>"<?= $isActive ? ' aria-current="page"' : '' ?>>
+                <i class='bx <?= $navItem['icon'] ?>'></i>
+                <span class="link-name"><?= e($navItem['label']) ?></span>
             </a>
         </li>
         <?php endforeach; ?>
+        <?php unset($navItem, $isActive); ?>
     </ul>
     <div class="profile-details">
         <div class="profile-info">

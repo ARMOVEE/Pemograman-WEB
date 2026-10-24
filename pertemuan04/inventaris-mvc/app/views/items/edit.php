@@ -1,10 +1,16 @@
 <?php require ROOT_PATH . '/app/views/layouts/header.php'; ?>
 
+<?php if (empty($item) || empty($item['id'])): ?>
+    <div class="alert alert-danger">
+        Data barang tidak ditemukan. <a href="<?= base_url('items') ?>" class="alert-link">Kembali ke daftar barang</a>
+    </div>
+<?php require ROOT_PATH . '/app/views/layouts/footer.php'; return; endif; ?>
+
 <h1 class="h3 mb-3">Ubah Barang</h1>
 
 <div class="card">
     <div class="card-body">
-        <form method="post" action="<?= base_url('items/update/' . (int) $item['id']) ?>" enctype="multipart/form-data">
+        <form method="post" action="<?= base_url('items/update/' . (int) ($item['id'] ?? 0)) ?>" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <?php require ROOT_PATH . '/app/views/items/_form.php'; ?>
             <a href="<?= base_url('items') ?>" class="btn btn-secondary">Batal</a>
