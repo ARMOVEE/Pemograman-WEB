@@ -130,4 +130,42 @@ class Item extends Model
 
         return $stmt->fetchAll();
     }
+
+    public function report(array $filters = []): array
+    {
+        $where = ["i.deleted_at IS NULL"];
+        $params = [];
+        if (!empty($filters['search'])) {
+            $where[] = "(i.code LIKE :search OR i.name LIKE :search)";
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+        if (!empty($filters['category'])) {
+            $where[] = "i.category_id = :category_id";
+            $params['category_id'] = (int) $filters['category'];
+        }
+        if (!empty($filters['low_stock'])) {
+            $where[] = "i.quantity <= :threshold";
+            $params['threshold'] = (int) ($filters['threshold'] ?? 5);
+        }
+        $sql = "SELECT i.code, i.name, c.name AS category_name, i.quantity, i.unit,
+                       i.price, i.entry_date
+                FROM items i
+                LEFT JOIN categories c ON i.category_id = c.id
+                WHERE " . implode(' AND ', $where) . "
+                ORDER BY i.name ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    public function topStock(int $limit = 5): array
+    {
+        $sql = "SELECT name, quantity
+                FROM items
+                WHERE deleted_at IS NULL
+                ORDER BY quantity DESC
+                LIMIT {$limit}";
+        return $this->db->query($sql)->fetchAll();
+    }
 }
+
