@@ -75,8 +75,13 @@ class CategoriesController extends Controller
     {
         $this->authorize('categories.manage');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('categories');
-        $this->model('Category')->delete((int) $id);
-        $this->flash('success', 'Kategori berhasil dihapus.');
+        $category = $this->model('Category')->find((int) $id);
+        if ($category && $this->model('Category')->softDelete((int) $id)) {
+            $this->flash('success', 'Kategori dipindahkan ke sampah (soft delete).');
+        } else {
+            $this->flash('danger', 'Kategori gagal dihapus.');
+        }
         $this->redirect('categories');
     }
 }
+

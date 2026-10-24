@@ -17,6 +17,14 @@ class Transaction extends Model
 
     public function create(array $data): bool
     {
+        $itemCheck = $this->db->prepare(
+            "SELECT id FROM items WHERE id = ? AND deleted_at IS NULL LIMIT 1"
+        );
+        $itemCheck->execute([(int) $data['item_id']]);
+        if (!$itemCheck->fetchColumn()) {
+            return false;
+        }
+
         try {
             $this->db->beginTransaction();
             $this->db->prepare(
@@ -56,6 +64,19 @@ class Transaction extends Model
             ]);
             return false;
         }
+    }
+
+    public function forItem(int $itemId, int $limit = 20): array
+    {
+        $sql = "SELECT t.*, u.full_name AS user_name
+                FROM transactions t
+                LEFT JOIN users u ON t.user_id = u.id
+                WHERE t.item_id = :item_id
+                ORDER BY t.created_at DESC, t.id DESC
+                LIMIT {$limit}";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['item_id' => $itemId]);
+        return $stmt->fetchAll();
     }
 
     public function recent(int $limit = 5): array

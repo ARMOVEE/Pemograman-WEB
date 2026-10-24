@@ -4,6 +4,11 @@
     <h1 class="h3 mb-0">Data Barang</h1>
     <div>
         <a href="<?= base_url('transactions') ?>" class="btn btn-outline-secondary">Riwayat Transaksi</a>
+        <?php if (can('items.restore')): ?>
+        <a href="<?= base_url('items/trash') ?>" class="btn btn-outline-secondary">
+            <i class="bi bi-trash"></i> Sampah
+        </a>
+        <?php endif; ?>
         <?php if (can('items.create')): ?>
         <a href="<?= base_url('items/create') ?>" class="btn btn-primary">Tambah Barang</a>
         <?php endif; ?>
@@ -70,6 +75,9 @@
                     <td class="text-end"><?= rupiah($row['price']) ?></td>
                     <td><?= e($row['entry_date'] ?? '-') ?></td>
                     <td class="text-end text-nowrap">
+                        <a href="<?= base_url('items/show/' . (int) $row['id']) ?>" class="btn btn-sm btn-outline-primary" title="Detail">
+                            <i class="bi bi-eye"></i>
+                        </a>
                         <?php if (can('transactions.create')): ?>
                         <button type="button" class="btn btn-sm btn-outline-success"
                                 data-bs-toggle="modal" data-bs-target="#stockInModal"

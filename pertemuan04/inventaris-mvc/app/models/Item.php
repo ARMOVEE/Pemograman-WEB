@@ -2,6 +2,8 @@
 
 class Item extends Model
 {
+    use SoftDeletes;
+
     public const LOW_STOCK_THRESHOLD = 5;
 
     protected string $table = 'items';
@@ -11,15 +13,31 @@ class Item extends Model
         return $this->db->query(
             "SELECT i.*, c.name AS category_name
              FROM items i LEFT JOIN categories c ON i.category_id = c.id
+             WHERE i.deleted_at IS NULL
              ORDER BY i.id DESC"
         )->fetchAll();
+    }
+
+    public function find(int $id, bool $withTrashed = false)
+    {
+        $sql = "SELECT i.*, c.name AS category_name
+                FROM items i
+                LEFT JOIN categories c ON i.category_id = c.id
+                WHERE i.id = ?";
+        $params = [$id];
+        if (!$withTrashed) {
+            $sql .= " AND i.deleted_at IS NULL";
+        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetch();
     }
 
     public function create(array $data): bool
     {
         return $this->db->prepare(
-            "INSERT INTO items (code, name, category_id, quantity, unit, price, entry_date, description)
-             VALUES (:code, :name, :category_id, :quantity, :unit, :price, :entry_date, :description)"
+            "INSERT INTO items (code, name, category_id, quantity, unit, price, entry_date, description, photo)
+             VALUES (:code, :name, :category_id, :quantity, :unit, :price, :entry_date, :description, :photo)"
         )->execute($data);
     }
 
@@ -28,8 +46,8 @@ class Item extends Model
         $data['id'] = $id;
         return $this->db->prepare(
             "UPDATE items SET code = :code, name = :name, category_id = :category_id, quantity = :quantity,
-             unit = :unit, price = :price, entry_date = :entry_date, description = :description
-             WHERE id = :id"
+             unit = :unit, price = :price, entry_date = :entry_date, description = :description, photo = :photo
+             WHERE id = :id AND deleted_at IS NULL"
         )->execute($data);
     }
 
@@ -41,10 +59,15 @@ class Item extends Model
         return 'ITM' . str_pad((string)((($max ? (int)$max : 0) + 1)), 4, '0', STR_PAD_LEFT);
     }
 
-    public function paginate(int $limit = 10, int $page = 1, string $search = '', string $categoryId = ''): array
-    {
+    public function paginate(
+        int $limit = 10,
+        int $page = 1,
+        string $search = '',
+        string $categoryId = '',
+        bool $trashed = false
+    ): array {
         $offset = ($page - 1) * $limit;
-        $where = [];
+        $where = [$trashed ? "i.deleted_at IS NOT NULL" : "i.deleted_at IS NULL"];
         $params = [];
         if ($search !== '') {
             $where[] = "(i.code LIKE :search OR i.name LIKE :search OR c.name LIKE :search)";
@@ -54,7 +77,7 @@ class Item extends Model
             $where[] = "i.category_id = :category_id";
             $params['category_id'] = (int) $categoryId;
         }
-        $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+        $whereSql = 'WHERE ' . implode(' AND ', $where);
 
         $count = $this->db->prepare("SELECT COUNT(*) FROM items i
             LEFT JOIN categories c ON i.category_id = c.id {$whereSql}");
@@ -67,42 +90,43 @@ class Item extends Model
         $stmt->execute($params);
 
         return [
-            'data' => $stmt->fetchAll(),
+            'data'         => $stmt->fetchAll(),
             'current_page' => $page,
-            'total_pages' => (int) ceil($total / max($limit, 1)),
-            'total_data' => $total,
+            'total_pages'  => (int) ceil($total / max($limit, 1)),
+            'total_data'   => $total,
         ];
     }
 
     public function totalItems(): int
     {
-        return (int) $this->db->query("SELECT COUNT(*) FROM items")->fetchColumn();
+        return (int) $this->db->query("SELECT COUNT(*) FROM items WHERE deleted_at IS NULL")->fetchColumn();
     }
 
     public function totalStock(): int
     {
-        return (int) $this->db->query("SELECT COALESCE(SUM(quantity), 0) FROM items")->fetchColumn();
+        return (int) $this->db->query("SELECT COALESCE(SUM(quantity), 0) FROM items WHERE deleted_at IS NULL")->fetchColumn();
     }
 
     public function totalAssetValue(): float
     {
-        return (float) $this->db->query("SELECT COALESCE(SUM(quantity * price), 0) FROM items")->fetchColumn();
+        return (float) $this->db->query("SELECT COALESCE(SUM(quantity * price), 0) FROM items WHERE deleted_at IS NULL")->fetchColumn();
     }
 
-    public function lowStockCount(): int
+    public function lowStockCount(int $threshold = self::LOW_STOCK_THRESHOLD): int
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM items WHERE quantity <= :threshold");
-        $stmt->execute(['threshold' => self::LOW_STOCK_THRESHOLD]);
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM items WHERE quantity <= :threshold AND deleted_at IS NULL");
+        $stmt->execute(['threshold' => $threshold]);
 
         return (int) $stmt->fetchColumn();
     }
 
-    public function lowStockItems(): array
+    public function lowStockItems(int $threshold = self::LOW_STOCK_THRESHOLD, int $limit = 20): array
     {
         $stmt = $this->db->prepare("SELECT i.*, c.name AS category_name
             FROM items i LEFT JOIN categories c ON i.category_id = c.id
-            WHERE i.quantity <= :threshold ORDER BY i.quantity ASC, i.code ASC");
-        $stmt->execute(['threshold' => self::LOW_STOCK_THRESHOLD]);
+            WHERE i.quantity <= :threshold AND i.deleted_at IS NULL
+            ORDER BY i.quantity ASC, i.code ASC LIMIT {$limit}");
+        $stmt->execute(['threshold' => $threshold]);
 
         return $stmt->fetchAll();
     }

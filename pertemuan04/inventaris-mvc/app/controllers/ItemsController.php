@@ -36,6 +36,20 @@ class ItemsController extends Controller
         ]);
     }
 
+    public function show($id = null): void
+    {
+        $this->authorize('items.view');
+        $item = $id ? $this->model('Item')->find((int) $id) : null;
+        if (!$item) {
+            Security::abort(404, 'Barang tidak ditemukan', 'Barang yang Anda cari tidak ada atau sudah dihapus.');
+        }
+        $this->view('items/show', [
+            'title'        => 'Detail Barang',
+            'item'         => $item,
+            'transactions' => $this->model('Transaction')->forItem((int) $item['id'], 20),
+        ]);
+    }
+
     public function create(): void
     {
         $this->authorize('items.create');
@@ -56,12 +70,26 @@ class ItemsController extends Controller
             $this->flash('danger', $error);
             $this->redirect('items/create');
         }
+
+        $data = $this->payload($input);
+        if (!empty($_FILES['photo']['name'])) {
+            try {
+                $data['photo'] = Upload::image($_FILES['photo']);
+            } catch (RuntimeException $e) {
+                $this->flash('danger', 'Foto gagal diunggah: ' . $e->getMessage());
+                $this->redirect('items/create');
+            }
+        }
+
         try {
-            $this->model('Item')->create($this->payload($input));
+            $this->model('Item')->create($data);
         } catch (PDOException $e) {
-            $this->flash('danger', 'Gagal menyimpan. Kode barang mungkin sudah dipakai.');
+            Upload::remove($data['photo']);
+            Logger::error('Create item failed', ['error' => $e->getMessage()]);
+            $this->flash('danger', 'Barang gagal disimpan. Pastikan kode barang belum dipakai.');
             $this->redirect('items/create');
         }
+
         $this->flash('success', 'Barang berhasil ditambahkan.');
         $this->redirect('items');
     }
@@ -86,29 +114,112 @@ class ItemsController extends Controller
         $this->authorize('items.update');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('items');
         $id = (int) $id;
+        $current = $this->model('Item')->find($id);
+        if (!$current) {
+            $this->flash('danger', 'Barang tidak ditemukan.');
+            $this->redirect('items');
+        }
+
         $input = array_map('trim', $_POST);
         $error = $this->validationError($input);
         if ($error) {
             $this->flash('danger', $error);
             $this->redirect('items/edit/' . $id);
         }
+
+        $data = $this->payload($input);
+        $data['photo'] = $current['photo'];
+        $oldPhoto = $current['photo'];
+        $newPhoto = null;
+
+        if (!empty($_FILES['photo']['name'])) {
+            try {
+                $newPhoto = Upload::image($_FILES['photo']);
+                $data['photo'] = $newPhoto;
+            } catch (RuntimeException $e) {
+                $this->flash('danger', 'Foto gagal diunggah: ' . $e->getMessage());
+                $this->redirect('items/edit/' . $id);
+            }
+        } elseif (!empty($input['remove_photo'])) {
+            $data['photo'] = null;
+        }
+
         try {
-            $this->model('Item')->update($id, $this->payload($input));
+            $this->model('Item')->update($id, $data);
         } catch (PDOException $e) {
-            $this->flash('danger', 'Gagal menyimpan. Kode barang mungkin sudah dipakai.');
+            Upload::remove($newPhoto);
+            $this->flash('danger', 'Barang gagal diperbarui.');
             $this->redirect('items/edit/' . $id);
         }
+
+        if ($data['photo'] !== $oldPhoto) {
+            Upload::remove($oldPhoto);
+        }
+
         $this->flash('success', 'Barang berhasil diperbarui.');
         $this->redirect('items');
     }
 
-    public function delete($id = 0): void
+    /**
+     * Soft-delete an item (data stays recoverable).
+     */
+    public function delete($id = null): void
     {
         $this->authorize('items.delete');
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('items');
-        $this->model('Item')->delete((int) $id);
-        $this->flash('success', 'Barang berhasil dihapus.');
+        if (!$id) {
+            $this->redirect('items');
+        }
+        $item = $this->model('Item')->find((int) $id);
+        if ($item && $this->model('Item')->softDelete((int) $id)) {
+            $this->flash('success', 'Barang dipindahkan ke sampah (soft delete).');
+        } else {
+            $this->flash('danger', 'Barang gagal dihapus.');
+        }
         $this->redirect('items');
+    }
+
+    /**
+     * Trash bin (administrators only may restore).
+     */
+    public function trash(): void
+    {
+        $this->authorize('items.restore');
+        $search = query_param('search');
+        $categoryId = query_param('category');
+        $page = max(1, (int) query_param('page', '1'));
+        $limit = (int) $this->queryParam('limit');
+        if (!in_array($limit, self::LIMITS, true)) {
+            $limit = 10;
+        }
+
+        $this->view('items/trash', [
+            'title'        => 'Sampah Barang',
+            'items'        => $this->model('Item')->paginate($limit, $page, $search, $categoryId, true),
+            'categories'   => $this->model('Category')->all(),
+            'search'       => $search,
+            'category'     => $categoryId,
+            'currentLimit' => $limit,
+            'limit'        => $limit,
+            'limits'       => self::LIMITS,
+        ]);
+    }
+
+    /**
+     * Restore a soft-deleted item.
+     */
+    public function restore($id = null): void
+    {
+        $this->authorize('items.restore');
+        if (!$id || !$this->model('Item')->find((int) $id, true)) {
+            $this->flash('danger', 'Barang tidak ditemukan di sampah.');
+            $this->redirect('items/trash');
+        }
+        if ($this->model('Item')->restore((int) $id)) {
+            $this->flash('success', 'Barang berhasil dipulihkan.');
+        } else {
+            $this->flash('danger', 'Barang gagal dipulihkan.');
+        }
+        $this->redirect('items/trash');
     }
 
     private function validationError(array $input): ?string
@@ -133,6 +244,7 @@ class ItemsController extends Controller
             'price' => (float)($input['price'] ?? 0),
             'entry_date' => ($input['entry_date'] ?? '') !== '' ? $input['entry_date'] : null,
             'description' => $input['description'] ?? '',
+            'photo' => null,
         ];
     }
 
