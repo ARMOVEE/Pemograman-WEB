@@ -28,4 +28,14 @@ class User extends Model
         $stmt = $this->db->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?");
         $stmt->execute([$id]);
     }
+
+    public function findByUsername(string $username)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT id, username, full_name, role FROM users WHERE username = ? AND is_active = 1"
+        );
+        $stmt->execute([$username]);
+        return $stmt->fetch();
+    }
 }
+
