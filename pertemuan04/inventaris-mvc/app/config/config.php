@@ -29,3 +29,8 @@ define('DB_PORT', env('DB_PORT', '3306'));
 define('DB_USER', env('DB_USER', 'root'));
 define('DB_PASS', env('DB_PASS', ''));
 define('DB_NAME', env('DB_NAME', 'db_inventory'));
+
+define('SESSION_IDLE_TIMEOUT', ((int) env('SESSION_IDLE_TIMEOUT', 30)) * 60);
+define('UPLOAD_MAX_BYTES', ((int) env('UPLOAD_MAX_MB', 2)) * 1024 * 1024);
+define('API_ALLOWED_ORIGIN', env('API_ALLOWED_ORIGIN', '*'));
+define('API_DEFAULT_LIMIT', (int) env('API_DEFAULT_LIMIT', 10));
