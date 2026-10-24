@@ -1,4 +1,13 @@
 <?php
+// Layani berkas statis jika dijalankan via PHP built-in server (php -S).
+if (php_sapi_name() === 'cli-server') {
+    $staticPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+    $staticFile = __DIR__ . $staticPath;
+    if ($staticPath !== '/' && is_file($staticFile)) {
+        return false;
+    }
+}
+
 require_once __DIR__ . '/../app/config/config.php';
 require_once __DIR__ . '/../app/core/helpers.php';
 
