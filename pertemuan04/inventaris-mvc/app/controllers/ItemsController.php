@@ -11,6 +11,7 @@ class ItemsController extends Controller
 
     public function index(): void
     {
+        $this->authorize('items.view');
         $limit = (int) $this->queryParam('limit');
         if (!in_array($limit, self::LIMITS, true)) {
             $limit = 10;
@@ -37,6 +38,7 @@ class ItemsController extends Controller
 
     public function create(): void
     {
+        $this->authorize('items.create');
         $this->view('items/create', [
             'title' => 'Tambah Barang',
             'item' => ['code' => $this->model('Item')->generateCode()],
@@ -46,6 +48,7 @@ class ItemsController extends Controller
 
     public function store(): void
     {
+        $this->authorize('items.create');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('items');
         $input = array_map('trim', $_POST);
         $error = $this->validationError($input);
@@ -65,6 +68,7 @@ class ItemsController extends Controller
 
     public function edit($id = 0): void
     {
+        $this->authorize('items.update');
         $item = $this->model('Item')->find((int) $id);
         if (!$item) {
             $this->flash('danger', 'Barang tidak ditemukan.');
@@ -79,6 +83,7 @@ class ItemsController extends Controller
 
     public function update($id = 0): void
     {
+        $this->authorize('items.update');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('items');
         $id = (int) $id;
         $input = array_map('trim', $_POST);
@@ -99,6 +104,7 @@ class ItemsController extends Controller
 
     public function delete($id = 0): void
     {
+        $this->authorize('items.delete');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') $this->redirect('items');
         $this->model('Item')->delete((int) $id);
         $this->flash('success', 'Barang berhasil dihapus.');

@@ -4,11 +4,19 @@ $navSegment = is_string($navUrl) ? explode('/', trim($navUrl, '/'))[0] : '';
 $navIs = fn (array $names): bool => in_array($navSegment, $names, true);
 
 $navItems = [
-    ['label' => 'Dashboard', 'url' => '/',            'icon' => 'bx-grid-alt',   'match' => ['', 'home', 'dashboard']],
-    ['label' => 'Barang',    'url' => 'items',        'icon' => 'bx-collection', 'match' => ['items']],
-    ['label' => 'Kategori',  'url' => 'categories',   'icon' => 'bx-category',   'match' => ['categories']],
-    ['label' => 'Transaksi', 'url' => 'transactions', 'icon' => 'bx-transfer',   'match' => ['transactions']],
+    ['label' => 'Dashboard', 'url' => '/',            'icon' => 'bx-grid-alt',         'match' => ['', 'home', 'dashboard']],
+    ['label' => 'Barang',    'url' => 'items',        'icon' => 'bx-collection',       'match' => ['items'], 'permission' => 'items.view'],
+    ['label' => 'Kategori',  'url' => 'categories',   'icon' => 'bx-category',         'match' => ['categories'], 'permission' => 'categories.view'],
+    ['label' => 'Transaksi', 'url' => 'transactions', 'icon' => 'bx-transfer',         'match' => ['transactions'], 'permission' => 'transactions.view'],
+    ['label' => 'Laporan',   'url' => 'reports',      'icon' => 'bx-bar-chart-alt-2',  'match' => ['reports'], 'permission' => 'reports.view'],
+    ['label' => 'Pengguna',  'url' => 'users',        'icon' => 'bx-user',             'match' => ['users'], 'permission' => 'users.view'],
+    ['label' => 'Log',       'url' => 'logs',         'icon' => 'bx-notepad',          'match' => ['logs'], 'permission' => 'logs.view'],
 ];
+
+$navItems = array_filter(
+    $navItems,
+    static fn(array $nav): bool => !isset($nav['permission']) || Middleware::can($nav['permission'])
+);
 
 $navName = (string) ($_SESSION['user']['full_name'] ?? '');
 $navInitial = function_exists('mb_substr')
@@ -41,6 +49,7 @@ $navInitial = function_exists('mb_substr')
             </div>
         </div>
         <form method="post" action="<?= base_url('auth/logout') ?>" class="m-0">
+            <?= csrf_field() ?>
             <button type="submit" class="btn-logout" title="Keluar" aria-label="Keluar"><i class='bx bx-log-out'></i></button>
         </form>
     </div>

@@ -4,7 +4,9 @@
     <h1 class="h3 mb-0">Data Barang</h1>
     <div>
         <a href="<?= base_url('transactions') ?>" class="btn btn-outline-secondary">Riwayat Transaksi</a>
+        <?php if (can('items.create')): ?>
         <a href="<?= base_url('items/create') ?>" class="btn btn-primary">Tambah Barang</a>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -68,17 +70,24 @@
                     <td class="text-end"><?= rupiah($row['price']) ?></td>
                     <td><?= e($row['entry_date'] ?? '-') ?></td>
                     <td class="text-end text-nowrap">
+                        <?php if (can('transactions.create')): ?>
                         <button type="button" class="btn btn-sm btn-outline-success"
                                 data-bs-toggle="modal" data-bs-target="#stockInModal"
                                 data-item-id="<?= (int) $row['id'] ?>" data-item-name="<?= e($row['name']) ?>">Masuk</button>
                         <button type="button" class="btn btn-sm btn-outline-warning"
                                 data-bs-toggle="modal" data-bs-target="#stockOutModal"
                                 data-item-id="<?= (int) $row['id'] ?>" data-item-name="<?= e($row['name']) ?>">Keluar</button>
+                        <?php endif; ?>
+                        <?php if (can('items.update')): ?>
                         <a href="<?= base_url('items/edit/' . (int) $row['id']) ?>" class="btn btn-sm btn-outline-secondary">Ubah</a>
+                        <?php endif; ?>
+                        <?php if (can('items.delete')): ?>
                         <form method="post" action="<?= base_url('items/delete/' . (int) $row['id']) ?>" class="d-inline"
-                              onsubmit="return confirm('Hapus barang ini? Riwayat transaksinya juga ikut terhapus.')">
+                              onsubmit="return confirm('Hapus barang ini?')">
+                            <?= csrf_field() ?>
                             <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
                         </form>
+                        <?php endif; ?>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -128,6 +137,7 @@
 <div class="modal fade" id="stockInModal" tabindex="-1" aria-labelledby="stockInLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form method="post" action="<?= base_url('transactions/stockIn') ?>" class="modal-content">
+            <?= csrf_field() ?>
             <div class="modal-header">
                 <h5 class="modal-title" id="stockInLabel">Barang Masuk</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
@@ -155,6 +165,7 @@
 <div class="modal fade" id="stockOutModal" tabindex="-1" aria-labelledby="stockOutLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form method="post" action="<?= base_url('transactions/stockOut') ?>" class="modal-content">
+            <?= csrf_field() ?>
             <div class="modal-header">
                 <h5 class="modal-title" id="stockOutLabel">Barang Keluar</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>

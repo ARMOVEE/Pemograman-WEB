@@ -22,4 +22,14 @@ class Controller
     }
 
     protected function requireLogin(): void { Middleware::requireLogin(); }
+
+    protected function authorize(string $permission): void
+    {
+        Middleware::requirePermission($permission);
+    }
+
+    protected function requireAdmin(): void
+    {
+        Middleware::requireRole('admin');
+    }
 }

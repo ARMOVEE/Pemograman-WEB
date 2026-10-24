@@ -5,6 +5,7 @@
 <div class="card">
     <div class="card-body">
         <form method="post" action="<?= base_url('items/update/' . (int) $item['id']) ?>">
+            <?= csrf_field() ?>
             <?php require ROOT_PATH . '/app/views/items/_form.php'; ?>
             <a href="<?= base_url('items') ?>" class="btn btn-secondary">Batal</a>
             <button type="submit" class="btn btn-primary">Perbarui</button>

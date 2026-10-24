@@ -9,6 +9,7 @@ class TransactionsController extends Controller
 
     public function index(): void
     {
+        $this->authorize('transactions.view');
         $this->view('transactions/index', [
             'title' => 'Riwayat Transaksi',
             'transactions' => $this->model('Transaction')->all(),
@@ -17,11 +18,13 @@ class TransactionsController extends Controller
 
     public function stockIn(): void
     {
+        $this->authorize('transactions.create');
         $this->store('IN', 'Barang masuk berhasil dicatat!');
     }
 
     public function stockOut(): void
     {
+        $this->authorize('transactions.create');
         $this->store('OUT', 'Barang keluar berhasil dicatat!');
     }
 

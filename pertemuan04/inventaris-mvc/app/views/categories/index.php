@@ -2,7 +2,9 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0">Data Kategori</h1>
+    <?php if (can('categories.manage')): ?>
     <a href="<?= base_url('categories/create') ?>" class="btn btn-primary">Tambah Kategori</a>
+    <?php endif; ?>
 </div>
 
 <div class="card">
@@ -28,11 +30,16 @@
                     <td><?= e($c['description']) ?></td>
                     <td class="text-center"><?= (int) $c['item_count'] ?></td>
                     <td class="text-end">
+                        <?php if (can('categories.manage')): ?>
                         <a href="<?= base_url('categories/edit/' . (int) $c['id']) ?>" class="btn btn-sm btn-outline-secondary">Ubah</a>
                         <form method="post" action="<?= base_url('categories/delete/' . (int) $c['id']) ?>" class="d-inline"
                               onsubmit="return confirm('Hapus kategori ini? Barang di dalamnya tidak ikut terhapus, tetapi menjadi tanpa kategori.')">
+                            <?= csrf_field() ?>
                             <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
                         </form>
+                        <?php else: ?>
+                        <span class="text-muted small">-</span>
+                        <?php endif; ?>
                     </td>
                 </tr>
             <?php endforeach; ?>

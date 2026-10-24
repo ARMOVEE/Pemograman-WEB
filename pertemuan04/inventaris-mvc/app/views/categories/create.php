@@ -5,6 +5,7 @@
 <div class="card">
     <div class="card-body">
         <form method="post" action="<?= base_url('categories/store') ?>">
+            <?= csrf_field() ?>
             <?php require ROOT_PATH . '/app/views/categories/_form.php'; ?>
             <a href="<?= base_url('categories') ?>" class="btn btn-secondary">Batal</a>
             <button type="submit" class="btn btn-primary">Simpan</button>
