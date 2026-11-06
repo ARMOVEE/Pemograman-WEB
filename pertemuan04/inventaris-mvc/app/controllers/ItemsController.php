@@ -235,6 +235,25 @@ class ItemsController extends Controller
         $this->redirect('items/trash');
     }
 
+    /**
+     * Restore all soft-deleted items at once.
+     */
+    public function restoreAll(): void
+    {
+        $this->authorize('items.restore');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('items/trash');
+        }
+        $count = $this->model('Item')->restoreAll();
+        if ($count > 0) {
+            $this->logActivity('item.restore_all', 'item', null, "Memulihkan {$count} barang dari sampah");
+            $this->flash('success', "{$count} barang berhasil dipulihkan dari sampah.");
+        } else {
+            $this->flash('info', 'Tidak ada barang di sampah untuk dipulihkan.');
+        }
+        $this->redirect('items');
+    }
+
     private function validationError(array $input): ?string
     {
         if (($input['code'] ?? '') === '' || ($input['name'] ?? '') === '') {

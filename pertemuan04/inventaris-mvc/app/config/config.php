@@ -21,7 +21,17 @@ function env(string $key, $default = null) {
 define('APP_NAME', env('APP_NAME', 'Inventory System'));
 define('APP_ENV', env('APP_ENV', 'production'));
 define('APP_DEBUG', filter_var(env('APP_DEBUG', false), FILTER_VALIDATE_BOOLEAN));
-define('BASEURL', rtrim(env('BASE_URL', 'http://localhost:8000'), '/'));
+$detectedBaseUrl = (function () {
+    if (!empty($_SERVER['HTTP_HOST'])) {
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+            || (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) === 'on');
+        $scheme = $isHttps ? 'https' : 'http';
+        return $scheme . '://' . $_SERVER['HTTP_HOST'];
+    }
+    return rtrim(env('BASE_URL', 'http://localhost:8000'), '/');
+})();
+define('BASEURL', $detectedBaseUrl);
 date_default_timezone_set(env('APP_TIMEZONE', 'Asia/Jakarta'));
 
 define('DB_HOST', env('DB_HOST', 'localhost'));

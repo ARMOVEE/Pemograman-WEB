@@ -4,9 +4,20 @@
         <h3 class="mb-0 fw-bold">Sampah Barang</h3>
         <small class="text-muted">Barang yang dihapus dapat dipulihkan</small>
     </div>
-    <a href="<?= base_url('items') ?>" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Kembali ke Barang
-    </a>
+    <div class="d-flex gap-2">
+        <?php if (!empty($items['data'])): ?>
+        <form action="<?= base_url('items/restoreAll') ?>" method="post"
+              onsubmit="return confirm('Apakah Anda yakin ingin memulihkan SEMUA barang dari sampah?')">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-arrow-counterclockwise"></i> Pulihkan Semua
+            </button>
+        </form>
+        <?php endif; ?>
+        <a href="<?= base_url('items') ?>" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Kembali ke Barang
+        </a>
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm">

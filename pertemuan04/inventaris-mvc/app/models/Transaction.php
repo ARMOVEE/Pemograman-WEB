@@ -7,9 +7,13 @@ class Transaction extends Model
     public function all(): array
     {
         return $this->db->query(
-            "SELECT t.*, i.code AS item_code, i.name AS item_name, i.unit, u.full_name AS user_name
+            "SELECT t.*,
+                    COALESCE(t.item_code, i.code) AS item_code,
+                    COALESCE(t.item_name, i.name) AS item_name,
+                    COALESCE(t.item_unit, i.unit, 'unit') AS unit,
+                    u.full_name AS user_name
              FROM transactions t
-             JOIN items i ON t.item_id = i.id
+             LEFT JOIN items i ON t.item_id = i.id
              JOIN users u ON t.user_id = u.id
              ORDER BY t.created_at DESC, t.id DESC"
         )->fetchAll();
@@ -17,21 +21,25 @@ class Transaction extends Model
 
     public function create(array $data): bool
     {
-        $itemCheck = $this->db->prepare(
-            "SELECT id FROM items WHERE id = ? AND deleted_at IS NULL LIMIT 1"
+        $itemStmt = $this->db->prepare(
+            "SELECT id, code, name, unit FROM items WHERE id = ? AND deleted_at IS NULL LIMIT 1"
         );
-        $itemCheck->execute([(int) $data['item_id']]);
-        if (!$itemCheck->fetchColumn()) {
+        $itemStmt->execute([(int) $data['item_id']]);
+        $item = $itemStmt->fetch();
+        if (!$item) {
             return false;
         }
 
         try {
             $this->db->beginTransaction();
             $this->db->prepare(
-                "INSERT INTO transactions (item_id, user_id, type, quantity, notes)
-                 VALUES (:item_id, :user_id, :type, :quantity, :notes)"
+                "INSERT INTO transactions (item_id, item_code, item_name, item_unit, user_id, type, quantity, notes)
+                 VALUES (:item_id, :item_code, :item_name, :item_unit, :user_id, :type, :quantity, :notes)"
             )->execute([
                 ':item_id' => $data['item_id'],
+                ':item_code' => $item['code'],
+                ':item_name' => $item['name'],
+                ':item_unit' => $item['unit'] ?? 'unit',
                 ':user_id' => $data['user_id'],
                 ':type' => $data['type'], // 'IN' atau 'OUT'
                 ':quantity' => $data['quantity'],
@@ -103,7 +111,11 @@ class Transaction extends Model
         $countStmt->execute($params);
         $total = (int) $countStmt->fetchColumn();
 
-        $sql = "SELECT t.*, i.code AS item_code, i.name AS item_name, u.full_name AS user_name
+        $sql = "SELECT t.*,
+                       COALESCE(t.item_code, i.code) AS item_code,
+                       COALESCE(t.item_name, i.name) AS item_name,
+                       COALESCE(t.item_unit, i.unit, 'unit') AS unit,
+                       u.full_name AS user_name
                 FROM transactions t
                 LEFT JOIN items i ON t.item_id = i.id
                 LEFT JOIN users u ON t.user_id = u.id
@@ -138,7 +150,10 @@ class Transaction extends Model
             $params['type'] = $type;
         }
         $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-        $sql = "SELECT t.created_at, i.code AS item_code, i.name AS item_name,
+        $sql = "SELECT t.created_at,
+                       COALESCE(t.item_code, i.code) AS item_code,
+                       COALESCE(t.item_name, i.name) AS item_name,
+                       COALESCE(t.item_unit, i.unit, 'unit') AS unit,
                        t.type, t.quantity, u.full_name AS user_name, t.notes
                 FROM transactions t
                 LEFT JOIN items i ON t.item_id = i.id
@@ -208,9 +223,13 @@ class Transaction extends Model
 
     public function recent(int $limit = 5): array
     {
-        $stmt = $this->db->prepare("SELECT t.*, i.code AS item_code, i.name AS item_name, u.full_name AS user_name
+        $stmt = $this->db->prepare("SELECT t.*,
+                COALESCE(t.item_code, i.code) AS item_code,
+                COALESCE(t.item_name, i.name) AS item_name,
+                COALESCE(t.item_unit, i.unit, 'unit') AS unit,
+                u.full_name AS user_name
             FROM transactions t
-            JOIN items i ON t.item_id = i.id
+            LEFT JOIN items i ON t.item_id = i.id
             JOIN users u ON t.user_id = u.id
             ORDER BY t.created_at DESC, t.id DESC LIMIT :limit");
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);

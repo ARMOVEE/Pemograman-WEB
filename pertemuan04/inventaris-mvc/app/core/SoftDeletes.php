@@ -19,4 +19,13 @@ trait SoftDeletes
         );
         return $stmt->execute([$id]);
     }
+
+    public function restoreAll(): int
+    {
+        $stmt = $this->db->prepare(
+            "UPDATE {$this->table} SET deleted_at = NULL WHERE deleted_at IS NOT NULL"
+        );
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
 }

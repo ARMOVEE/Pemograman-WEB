@@ -170,4 +170,3 @@ Target hasil: **Lulus: 22 | Gagal: 0**
 - Konfigurasi server web tersedia di:
   * Apache: [`deploy/inventory.conf`](file:///c:/xampp/htdocs/pertemuan01/pertemuan04/inventaris-mvc/deploy/inventory.conf)
   * Nginx: [`deploy/inventory.nginx.conf`](file:///c:/xampp/htdocs/pertemuan01/pertemuan04/inventaris-mvc/deploy/inventory.nginx.conf)
-- Skrip pencadangan berkala database & berkas upload tersedia di [`deploy/backup.sh`](file:///c:/xampp/htdocs/pertemuan01/pertemuan04/inventaris-mvc/deploy/backup.sh).
